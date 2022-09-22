@@ -8,6 +8,7 @@ const SELECTORS = {
     dataList : document.querySelector('.content__list'),
     radioButtons: document.querySelectorAll('.filter__radio'),
     clearFilterButton: document.querySelector('.search__button'),
+    nameSearch: document.querySelector('.form__name'),
 }
 
 async function getPersonData() {
@@ -32,7 +33,7 @@ const renderDataContent = (arrayForRender) => {
     arrayForRender.forEach((element) => {
         let {fullName, age, mail, phone, photo} = element;
         let list = `
-        <li class="content__element">
+        <li class="content__element" data-person-name="${fullName}">
             <img src="${photo}" alt="photo profile" class="element__photo">
             <div class="element__details">
                 <h2 class="element__name">${fullName}</h2>
@@ -43,6 +44,7 @@ const renderDataContent = (arrayForRender) => {
             </div>
         </li>`
         SELECTORS.dataList.innerHTML += list;
+        SELECTORS.personName = document.querySelectorAll('.element__name');
     })
 }
 
@@ -70,6 +72,10 @@ const sortGender = (genderValue) => {
     STATES.genderStatus = true;
     STATES.sortedGenderData = STATES.sortedPersonData.filter((person) => person.gender === genderValue);
     renderDataContent(STATES.sortedGenderData);
+}
+
+const sortName = (arrayForFilter, filterContent) => {
+    return arrayForFilter.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
 }
 
 const chooseArrayForFilter = () => {
@@ -113,3 +119,7 @@ SELECTORS.clearFilterButton.addEventListener('click', function(){
     }
     renderDataContent(STATES.personData);
 });
+
+SELECTORS.nameSearch.addEventListener('input', function(){
+    renderDataContent(sortName(STATES.genderStatus ? STATES.sortedGenderData : STATES.sortedPersonData, this.value));
+})
