@@ -1,12 +1,15 @@
 const STATES = {
     personData : [],
     sortedPersonData : [],
+    genderPersonData: [],
     filtersData: [],
-    genderStatus: false,
+    filterType: '',
+    genderStatus: '',
 }
 const SELECTORS = {
     dataList : document.querySelector('.content__list'),
-    radioButtons: document.querySelectorAll('.filter__radio'),
+    radioButtons: document.getElementsByName('sort-az-age'),
+    radioButtonsGender: document.getElementsByName('sort-gender'),
     clearFilterButton: document.querySelector('.search__button'),
     nameSearch: document.querySelector('.form__name'),
 }
@@ -28,9 +31,9 @@ async function getPersonData() {
 }
 getPersonData();
 
-const renderDataContent = (arrayForRender) => {
+const renderDataContent = (arrayForFilter) => {
     SELECTORS.dataList.innerHTML = '';
-    arrayForRender.forEach((element) => {
+    arrayForFilter.forEach((element) => {
         let {fullName, age, mail, phone, photo} = element;
         let list = `
         <li class="content__element" data-person-name="${fullName}">
@@ -48,69 +51,79 @@ const renderDataContent = (arrayForRender) => {
     })
 }
 
-const sortAZ = (arrayForFilter) => {
-    arrayForFilter.sort(( a, b ) => a.fullName > b.fullName ? 1 : -1);
-    renderDataContent(arrayForFilter);
+const sortAZ = (arrayForFilter) => { 
+    return arrayForFilter.sort(( a, b ) => a.fullName > b.fullName ? 1 : -1);
 }
 
 const sortZA = (arrayForFilter) => {
-    arrayForFilter.sort(( a, b ) => a.fullName > b.fullName ? 1 : -1);
-    renderDataContent(arrayForFilter.reverse());
+    return arrayForFilter.sort(( a, b ) => a.fullName < b.fullName ? 1 : -1);
 }
 
 const sortAgeUp = (arrayForFilter) => {
-    arrayForFilter.sort(( a, b ) => a.age > b.age ? 1 : -1);
-    renderDataContent(arrayForFilter);
+    return arrayForFilter.sort(( a, b ) => a.age > b.age ? 1 : -1);
 }
 
 const sortAgeDown = (arrayForFilter) => {
-    arrayForFilter.sort(( a, b ) => a.age > b.age ? 1 : -1);
-    renderDataContent(arrayForFilter.reverse());
+    return arrayForFilter.sort(( a, b ) => a.age < b.age ? 1 : -1);
 }
 
-const sortGender = (genderValue) => {
-    STATES.genderStatus = true;
-    STATES.sortedGenderData = STATES.sortedPersonData.filter((person) => person.gender === genderValue);
-    renderDataContent(STATES.sortedGenderData);
+const sortGender = (filter) => {
+    STATES.genderPersonData = STATES.sortedPersonData.filter((person) => person.gender === filter);
 }
 
-const sortName = (arrayForFilter, filterContent) => {
-    return arrayForFilter.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
+const sortName = (filterContent) => {
+    if (STATES.genderPersonData.length > 0){
+        return STATES.genderPersonData.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
+    }
+    return STATES.sortedPersonData.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
 }
 
-const chooseArrayForFilter = () => {
-    return STATES.genderStatus ? STATES.sortedGenderData : STATES.sortedPersonData
-}
+const applyFilters = (arrayForFilter) => {
+    STATES.filtersData.forEach((filterType) => { 
+        if  (filterType === 'az'){
+            renderDataContent(sortAZ(arrayForFilter));
+        }
 
-const applyFilters = () => {
-    STATES.filtersData.forEach((filter) => {
-        if  (filter === 'az'){
-            sortAZ(chooseArrayForFilter());
+        if (filterType === 'za'){
+            renderDataContent(sortZA(arrayForFilter));
         }
-    
-        if (filter === 'za'){
-            sortZA(chooseArrayForFilter());
+
+        if (filterType === 'ageUp'){
+            renderDataContent(sortAgeUp(arrayForFilter));
         }
-    
-        if (filter === 'ageUp'){
-            sortAgeUp(chooseArrayForFilter());
-        }
-    
-        if (filter === 'ageDown'){
-            sortAgeDown(chooseArrayForFilter());
-        }
-    
-        if (filter === 'male' || filter === 'female'){
-            sortGender(filter);
+
+        if (filterType === 'ageDown'){
+            renderDataContent(sortAgeDown(arrayForFilter));
         }
     })
 }
 
 for (const radioButton of SELECTORS.radioButtons) {
     radioButton.addEventListener('change', function(event) {
-        STATES.filtersData.push(event.target.dataset.sortType);
-        applyFilters();
+
+        STATES.filterType = event.target.dataset.sortType;
+        STATES.filtersData.push(STATES.filterType);
+        if (STATES.genderPersonData.length > 0){
+            console.log("hi")
+            STATES.filtersData = [];
+            STATES.filtersData.push(STATES.filterType);
+            applyFilters(STATES.genderPersonData);
+        } else {
+            applyFilters(STATES.sortedPersonData);
+        }
     });
+}
+
+for (const radioButton of SELECTORS.radioButtonsGender) {
+    radioButton.addEventListener('change', function(event) {
+        STATES.filterType = event.target.dataset.sortType;
+        STATES.genderStatus = STATES.filterType;
+        sortGender(STATES.filterType);
+        if (STATES.filtersData.length != 0){
+            applyFilters(STATES.genderPersonData)
+        }
+        renderDataContent(STATES.genderPersonData)
+    })
 }
 
 SELECTORS.clearFilterButton.addEventListener('click', function(){
@@ -121,5 +134,5 @@ SELECTORS.clearFilterButton.addEventListener('click', function(){
 });
 
 SELECTORS.nameSearch.addEventListener('input', function(){
-    renderDataContent(sortName(STATES.genderStatus ? STATES.sortedGenderData : STATES.sortedPersonData, this.value));
+    renderDataContent(sortName(this.value));
 })

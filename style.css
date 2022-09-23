@@ -209,7 +209,7 @@ body {
     border: 1px solid #737373;
     border-radius: 5px;
     color: #737373;
-    flex-basis: calc(25% - 10px);
+    flex-basis: calc(50% - 10px);
 }
 @media (max-width: 772px){
     .content__element{
