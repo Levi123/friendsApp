@@ -1,10 +1,9 @@
 const STATES = {
     personData : [],
     sortedPersonData : [],
-    genderPersonData: [],
     filtersData: [],
     filterType: '',
-    genderStatus: '',
+    genderType: '',
 }
 const SELECTORS = {
     dataList : document.querySelector('.content__list'),
@@ -51,78 +50,52 @@ const renderDataContent = (arrayForFilter) => {
     })
 }
 
-const sortAZ = (arrayForFilter) => { 
-    return arrayForFilter.sort(( a, b ) => a.fullName > b.fullName ? 1 : -1);
+const filterGender = (filter) => {
+    STATES.sortedPersonData = STATES.personData.filter((person) => person.gender === filter);
+    renderDataContent(STATES.sortedPersonData);
 }
 
-const sortZA = (arrayForFilter) => {
-    return arrayForFilter.sort(( a, b ) => a.fullName < b.fullName ? 1 : -1);
+const filterName = (arrayForFilter, filterContent) => {
+    arrayForFilter = arrayForFilter.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()));
+    renderDataContent(arrayForFilter);
 }
 
-const sortAgeUp = (arrayForFilter) => {
-    return arrayForFilter.sort(( a, b ) => a.age > b.age ? 1 : -1);
-}
-
-const sortAgeDown = (arrayForFilter) => {
-    return arrayForFilter.sort(( a, b ) => a.age < b.age ? 1 : -1);
-}
-
-const sortGender = (filter) => {
-    STATES.genderPersonData = STATES.sortedPersonData.filter((person) => person.gender === filter);
-}
-
-const sortName = (filterContent) => {
-    if (STATES.genderPersonData.length > 0){
-        return STATES.genderPersonData.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
-    }
-    return STATES.sortedPersonData.filter((element) => element.fullName.toLowerCase().includes(filterContent.toLowerCase()))
-}
-
-const applyFilters = (arrayForFilter) => {
-    STATES.filtersData.forEach((filterType) => { 
-        if  (filterType === 'az'){
-            renderDataContent(sortAZ(arrayForFilter));
-        }
-
-        if (filterType === 'za'){
-            renderDataContent(sortZA(arrayForFilter));
-        }
-
-        if (filterType === 'ageUp'){
-            renderDataContent(sortAgeUp(arrayForFilter));
-        }
-
-        if (filterType === 'ageDown'){
-            renderDataContent(sortAgeDown(arrayForFilter));
+const applySortingFilters = () => {
+    STATES.filtersData.forEach((filterType) => {
+        switch(filterType) {
+            case 'az':
+                console.log(filterType);
+                STATES.sortedPersonData = STATES.sortedPersonData.sort(( a, b ) => a.fullName > b.fullName ? 1 : -1);
+                break;
+            case 'za':
+                STATES.sortedPersonData = STATES.sortedPersonData.sort(( a, b ) => a.fullName < b.fullName ? 1 : -1);
+                break;
+            case 'ageUp':
+                STATES.sortedPersonData = STATES.sortedPersonData.sort(( a, b ) => a.age > b.age ? 1 : -1);
+                break;
+            case 'ageDown':
+                STATES.sortedPersonData = STATES.sortedPersonData.sort(( a, b ) => a.age < b.age ? 1 : -1);
+                break;
         }
     })
+    renderDataContent(STATES.sortedPersonData);
 }
 
 for (const radioButton of SELECTORS.radioButtons) {
     radioButton.addEventListener('change', function(event) {
-
         STATES.filterType = event.target.dataset.sortType;
         STATES.filtersData.push(STATES.filterType);
-        if (STATES.genderPersonData.length > 0){
-            console.log("hi")
-            STATES.filtersData = [];
-            STATES.filtersData.push(STATES.filterType);
-            applyFilters(STATES.genderPersonData);
-        } else {
-            applyFilters(STATES.sortedPersonData);
-        }
+        applySortingFilters();
+        SELECTORS.nameSearch.value !== '' ? filterName(STATES.sortedPersonData, SELECTORS.nameSearch.value) : false;
     });
 }
 
 for (const radioButton of SELECTORS.radioButtonsGender) {
     radioButton.addEventListener('change', function(event) {
-        STATES.filterType = event.target.dataset.sortType;
-        STATES.genderStatus = STATES.filterType;
-        sortGender(STATES.filterType);
-        if (STATES.filtersData.length != 0){
-            applyFilters(STATES.genderPersonData)
-        }
-        renderDataContent(STATES.genderPersonData)
+        STATES.genderType = event.target.dataset.sortType;
+        filterGender(STATES.genderType);
+        applySortingFilters();
+        SELECTORS.nameSearch.value !== '' ? filterName(STATES.sortedPersonData, SELECTORS.nameSearch.value) : false;
     })
 }
 
@@ -130,9 +103,14 @@ SELECTORS.clearFilterButton.addEventListener('click', function(){
     for (const radioButton of SELECTORS.radioButtons){
         radioButton.checked = false;
     }
+
+    for (const radioButton of SELECTORS.radioButtonsGender){
+        radioButton.checked = false;
+    }
+
     renderDataContent(STATES.personData);
 });
 
 SELECTORS.nameSearch.addEventListener('input', function(){
-    renderDataContent(sortName(this.value));
+    filterName(STATES.sortedPersonData, this.value);
 })
